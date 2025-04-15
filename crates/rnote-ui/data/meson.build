@@ -247,6 +247,8 @@ rnote_ui_gresources_icons_files = files(
     'icons/scalable/actions/selection-resize-lock-aspectratio-symbolic.svg',
     'icons/scalable/actions/selection-select-all-symbolic.svg',
     'icons/scalable/actions/selection-trash-symbolic.svg',
+    'icons/scalable/actions/settings-save-symbolic.svg',
+    'icons/scalable/actions/settings-restore-symbolic.svg',
     'icons/scalable/actions/settings-symbolic.svg',
     'icons/scalable/actions/shapebuilder-arrow-symbolic.svg',
     'icons/scalable/actions/shapebuilder-coordsystem2d-symbolic.svg',

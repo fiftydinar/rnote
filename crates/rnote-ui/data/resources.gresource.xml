@@ -119,6 +119,8 @@
         <file compressed="true">icons/scalable/actions/selection-resize-lock-aspectratio-symbolic.svg</file>
         <file compressed="true">icons/scalable/actions/selection-select-all-symbolic.svg</file>
         <file compressed="true">icons/scalable/actions/selection-trash-symbolic.svg</file>
+        <file compressed="true">icons/scalable/actions/settings-save-symbolic.svg</file>
+        <file compressed="true">icons/scalable/actions/settings-restore-symbolic.svg</file>
         <file compressed="true">icons/scalable/actions/settings-symbolic.svg</file>
         <file compressed="true">icons/scalable/actions/shapebuilder-arrow-symbolic.svg</file>
         <file compressed="true">icons/scalable/actions/shapebuilder-coordsystem2d-symbolic.svg</file>
