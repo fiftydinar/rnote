@@ -141,7 +141,7 @@ pub enum EngineTask {
 }
 
 /// The engine configuration. Used when loading/saving the current configuration from/into persistent application settings.
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default, rename = "engine_config")]
 pub struct EngineConfig {
     #[serde(rename = "document")]

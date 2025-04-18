@@ -10,6 +10,7 @@
 pub(crate) mod app;
 pub(crate) mod appmenu;
 pub(crate) mod appwindow;
+pub(crate) mod boxed;
 pub(crate) mod canvas;
 pub(crate) mod canvasmenu;
 pub(crate) mod canvaswrapper;
@@ -39,6 +40,8 @@ pub(crate) mod workspacebrowser;
 pub(crate) use app::RnApp;
 pub(crate) use appmenu::RnAppMenu;
 pub(crate) use appwindow::RnAppWindow;
+pub(crate) use boxed::EngineConfigBoxed;
+pub(crate) use boxed::WidgetFlagsBoxed;
 pub(crate) use canvas::RnCanvas;
 pub(crate) use canvasmenu::RnCanvasMenu;
 pub(crate) use canvaswrapper::RnCanvasWrapper;

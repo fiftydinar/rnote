@@ -5,13 +5,14 @@ mod imp;
 
 // Imports
 use crate::{
-    FileType, RnApp, RnCanvas, RnCanvasWrapper, RnMainHeader, RnOverlays, RnSidebar, config,
-    dialogs,
+    EngineConfigBoxed, FileType, RnApp, RnCanvas, RnCanvasWrapper, RnMainHeader, RnOverlays,
+    RnSidebar, config, dialogs,
 };
 use adw::{prelude::*, subclass::prelude::*};
 use gettextrs::gettext;
 use gtk4::{Application, IconTheme, gdk, gio, glib};
 use rnote_compose::Color;
+use rnote_engine::engine::EngineConfig;
 use rnote_engine::ext::GdkRGBAExt;
 use rnote_engine::pens::PenStyle;
 use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
@@ -29,10 +30,22 @@ glib::wrapper! {
 
 impl RnAppWindow {
     const AUTOSAVE_INTERVAL_DEFAULT: u32 = 30;
-    const PERIODIC_CONFIGSAVE_INTERVAL: u32 = 10;
 
     pub(crate) fn new(app: &Application) -> Self {
         glib::Object::builder().property("application", app).build()
+    }
+
+    #[allow(unused)]
+    pub(crate) fn engine_config(&self) -> EngineConfig {
+        self.property::<EngineConfigBoxed>("engine-config").into()
+    }
+
+    #[allow(unused)]
+    pub(crate) fn set_engine_config(&self, engine_config: EngineConfig) {
+        self.set_property(
+            "engine-config",
+            EngineConfigBoxed::from(engine_config).to_value(),
+        );
     }
 
     #[allow(unused)]
@@ -148,9 +161,6 @@ impl RnAppWindow {
         } else {
             if let Err(e) = self.setup_settings_binds() {
                 error!("Failed to setup settings binds, Err: {e:?}");
-            }
-            if let Err(e) = self.setup_periodic_save() {
-                error!("Failed to setup periodic save, Err: {e:?}");
             }
             if let Err(e) = self.load_settings() {
                 error!("Failed to load initial settings, Err: {e:?}");
@@ -906,15 +916,23 @@ impl RnAppWindow {
         let active_canvas_wrapper = active_tab.child().downcast::<RnCanvasWrapper>().unwrap();
         let active_canvas = active_canvas_wrapper.canvas();
 
-        let mut widget_flags = active_canvas.engine_mut().load_engine_config_sync_tab(
-            prev_canvas.engine_ref().extract_engine_config(),
-            crate::env::pkg_data_dir().ok(),
-        );
+        let mut widget_flags = active_canvas
+            .engine_mut()
+            .load_engine_config_sync_tab(self.engine_config(), crate::env::pkg_data_dir().ok());
         // The visual-debug field is not saved in the config, but we want to sync its value between tabs.
         widget_flags |= active_canvas
             .engine_mut()
             .set_visual_debug(prev_canvas.engine_mut().visual_debug());
 
         self.handle_widget_flags(widget_flags, &active_canvas);
+    }
+
+    pub(crate) fn save_engine_config(&self) -> anyhow::Result<()> {
+        let app_settings = self
+            .app()
+            .app_settings()
+            .ok_or_else(|| anyhow::anyhow!("Settings schema not found."))?;
+        let engine_config = serde_json::to_string(&self.engine_config())?;
+        Ok(app_settings.set_string("engine-config", engine_config.as_str())?)
     }
 }

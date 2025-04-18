@@ -1,6 +1,6 @@
 // Imports
 use crate::appwindow::RnAppWindow;
-use adw::{prelude::*, subclass::prelude::*};
+use adw::prelude::*;
 use gtk4::{gdk, glib, glib::clone};
 use tracing::error;
 
@@ -445,10 +445,8 @@ impl RnAppWindow {
         }
 
         {
-            // Save engine config of the current active tab
-            if let Some(canvas) = self.active_tab_canvas() {
-                canvas.save_engine_config(&app_settings)?;
-            }
+            // Save engine config
+            self.save_engine_config()?;
         }
 
         {
@@ -457,46 +455,6 @@ impl RnAppWindow {
                 .workspacebrowser()
                 .workspacesbar()
                 .save_to_settings(&app_settings);
-        }
-
-        Ok(())
-    }
-
-    pub(crate) fn setup_periodic_save(&self) -> anyhow::Result<()> {
-        let app = self.app();
-        let app_settings = app
-            .app_settings()
-            .ok_or_else(|| anyhow::anyhow!("Settings schema not found."))?;
-
-        if let Some(removed_id) = self
-            .imp()
-            .periodic_configsave_source_id
-            .borrow_mut()
-            .replace(glib::source::timeout_add_seconds_local(
-                Self::PERIODIC_CONFIGSAVE_INTERVAL,
-                clone!(
-                    #[weak]
-                    app_settings,
-                    #[weak(rename_to=appwindow)]
-                    self,
-                    #[upgrade_or]
-                    glib::ControlFlow::Break,
-                    move || {
-                        let Some(canvas) = appwindow.active_tab_canvas() else {
-                            return glib::ControlFlow::Continue;
-                        };
-                        if let Err(e) = canvas.save_engine_config(&app_settings) {
-                            error!(
-                                "Saving engine config in periodic save task failed , Err: {e:?}"
-                            );
-                        }
-
-                        glib::ControlFlow::Continue
-                    }
-                ),
-            ))
-        {
-            removed_id.remove();
         }
 
         Ok(())

@@ -1,5 +1,5 @@
 // Imports
-use crate::{RnMainHeader, RnOverlays, RnSidebar, config, dialogs};
+use crate::{EngineConfigBoxed, RnMainHeader, RnOverlays, RnSidebar, config, dialogs};
 use adw::{prelude::*, subclass::prelude::*};
 use gettextrs::gettext;
 use gtk4::{
@@ -16,8 +16,8 @@ use tracing::{error, trace};
 pub(crate) struct RnAppWindow {
     pub(crate) drawing_pad_controller: RefCell<Option<PadController>>,
     pub(crate) autosave_source_id: RefCell<Option<glib::SourceId>>,
-    pub(crate) periodic_configsave_source_id: RefCell<Option<glib::SourceId>>,
 
+    pub(crate) engine_config: RefCell<EngineConfigBoxed>,
     pub(crate) save_in_progress: Cell<bool>,
     pub(crate) save_in_progress_toast: RefCell<Option<adw::Toast>>,
     pub(crate) autosave: Cell<bool>,
@@ -48,8 +48,8 @@ impl Default for RnAppWindow {
         Self {
             drawing_pad_controller: RefCell::new(None),
             autosave_source_id: RefCell::new(None),
-            periodic_configsave_source_id: RefCell::new(None),
 
+            engine_config: RefCell::new(EngineConfigBoxed::default()),
             save_in_progress: Cell::new(false),
             save_in_progress_toast: RefCell::new(None),
             autosave: Cell::new(true),
@@ -123,6 +123,7 @@ impl ObjectImpl for RnAppWindow {
     fn properties() -> &'static [glib::ParamSpec] {
         static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
             vec![
+                glib::ParamSpecBoxed::builder::<EngineConfigBoxed>("engine-config").build(),
                 glib::ParamSpecBoolean::builder("save-in-progress")
                     .default_value(false)
                     .build(),
@@ -156,6 +157,7 @@ impl ObjectImpl for RnAppWindow {
 
     fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
         match pspec.name() {
+            "engine-config" => self.engine_config.borrow().to_value(),
             "save-in-progress" => self.save_in_progress.get().to_value(),
             "autosave" => self.autosave.get().to_value(),
             "autosave-interval-secs" => self.autosave_interval_secs.get().to_value(),
@@ -170,6 +172,13 @@ impl ObjectImpl for RnAppWindow {
 
     fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
         match pspec.name() {
+            "engine-config" => {
+                self.engine_config
+                    .replace(value.get::<EngineConfigBoxed>().unwrap());
+                if let Err(err) = self.obj().save_engine_config() {
+                    tracing::warn!("Saving engine config failed, Err: {err:?}");
+                }
+            }
             "save-in-progress" => {
                 let save_in_progress = value
                     .get::<bool>()

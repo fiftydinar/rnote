@@ -72,6 +72,12 @@ impl CloneConfig for PenHolder {
     }
 }
 
+impl Clone for PenHolder {
+    fn clone(&self) -> Self {
+        self.clone_config()
+    }
+}
+
 impl PenHolder {
     /// Get the current registered shortcuts.
     pub fn shortcuts(&self) -> Shortcuts {
